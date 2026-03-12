@@ -52,6 +52,7 @@ from .spaces import (
 )
 from .spectral import (
     eig33,
+    eig33_invariants,
     eigenprojectors,
     eigenvalues,
     expm,
@@ -84,6 +85,7 @@ __all__ = [
     "dev",
     "deviatoric_projector",
     "eig33",
+    "eig33_invariants",
     "eigenprojectors",
     "eigenvalues",
     "expm",

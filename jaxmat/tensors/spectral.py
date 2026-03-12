@@ -100,6 +100,96 @@ def _eig33_single(A, rtol=1e-16):
     return eigvals, eigendyads
 
 
+@partial(jax.jit, static_argnums=1)
+def _eig33_single_invariants(A, rtol=1e-16):
+    def J2s(A):
+        d0 = A[0, 0] - A[1, 1]
+        d1 = A[0, 0] - A[2, 2]
+        d2 = A[1, 1] - A[2, 2]
+        offdiag = A[0, 1] ** 2 + A[0, 2] ** 2 + A[1, 2] ** 2
+        diag = (d0**2 + d1**2 + d2**2) / 6.0
+        return offdiag + diag
+
+    def J3s(A):
+        d0 = A[0, 0] - A[1, 1]
+        d1 = A[0, 0] - A[2, 2]
+        d2 = A[1, 1] - A[2, 2]
+        t1 = d1 + d2
+        t2 = d0 - d2
+        t3 = -d0 - d1
+        offdiag = 2.0 * A[0, 1] * A[1, 2] * A[0, 2]
+        mixed = (A[0, 1] ** 2 * t1 + A[0, 2] ** 2 * t2 + A[1, 2] ** 2 * t3) / 3.0
+        diag = (t1 * t2 * t3) / 27.0
+        return offdiag + mixed - diag
+
+    def dxs(A):
+        d0 = A[0, 0] - A[1, 1]
+        d1 = A[0, 0] - A[2, 2]
+        d2 = A[1, 1] - A[2, 2]
+
+        w = A[0, 1]
+        v = A[0, 2]
+        u = A[1, 2]
+
+        alpha = d2
+        beta = -d1
+        gamma = d0
+
+        return jnp.asarray(
+            [
+                3.0 * jnp.sqrt(3.0) * (v * w * alpha + u * (v * v - w * w)),
+                alpha * beta * gamma + alpha * u * u + beta * v * v + gamma * w * w,
+                2.0 * u * beta * gamma
+                - v * w * (beta - gamma)
+                + u * (2.0 * u * u - v * v - w * w),
+                2.0
+                * (
+                    v * alpha * gamma
+                    + u * w * (beta - gamma)
+                    + v * (v * v + w * w - 2.0 * u * u)
+                ),
+                2.0
+                * (
+                    w * alpha * beta
+                    + u * v * (beta - gamma)
+                    + w * (v * v + w * w - 2.0 * u * u)
+                ),
+            ],
+            dtype=A.dtype,
+        )
+
+    def discs(A):
+        terms = dxs(A)
+        return jnp.sum(terms * terms)
+
+    def compute_eigvals(A):
+        A = jnp.asarray(A)
+        I1 = jnp.trace(A)
+        j2 = J2s(A)
+        j3 = J3s(A)
+        discriminant = discs(A)
+        normA = safe_norm(A)
+
+        def branch_near_iso(_):
+            eigvals = jnp.ones((3,), dtype=A.dtype) * I1 / 3.0
+            return eigvals, eigvals
+
+        def branch_general(_):
+            phi = jnp.arctan2(safe_sqrt(27.0 * discriminant), 27.0 * j3)
+            amplitude = 2.0 * safe_sqrt(3.0 * j2)
+            shifts = 2.0 * jnp.pi * jnp.asarray([1.0, 2.0, 3.0], dtype=A.dtype)
+            eigvals = (amplitude * jnp.cos((phi + shifts) / 3.0) + I1) / 3.0
+            return eigvals, eigvals
+
+        return lax.cond(j2 < rtol * normA, branch_near_iso, branch_general, operand=None)
+
+    eigendyads, eigvals = jax.jacfwd(compute_eigvals, has_aux=True)(A)
+    order = jnp.argsort(eigvals)
+    eigvals = eigvals[order]
+    eigendyads = eigendyads[order]
+    return eigvals, eigendyads
+
+
 def _batched_spectral(single_fun, arr, *args):
     dim = arr.shape[-1]
     if arr.ndim == 2:
@@ -132,8 +222,17 @@ def eigenprojectors(A):
     return spectral_decomposition_sym(A)[1]
 
 
-def eig33(A, rtol=1e-16):
-    return _batched_spectral(_eig33_single, asarray(A), rtol)
+def eig33(A, rtol=1e-16, method: str = "harari_albocher"):
+    arr = asarray(A)
+    if method == "harari_albocher":
+        return _batched_spectral(_eig33_single, arr, rtol)
+    if method == "habera_zilian":
+        return _batched_spectral(_eig33_single_invariants, arr, rtol)
+    raise ValueError("method must be 'harari_albocher' or 'habera_zilian'")
+
+
+def eig33_invariants(A, rtol=1e-16):
+    return eig33(A, rtol=rtol, method="habera_zilian")
 
 
 def matrix_function_sym(A, fun):
