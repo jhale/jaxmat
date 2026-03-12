@@ -212,11 +212,11 @@ class Tensor(eqx.Module):
         return self._wrap_full(space, jnp.linalg.inv(self.as_full()))
 
     def rotate(self, R: jax.Array) -> Tensor:
-        assert self.rank <= 13
-        pairs = [(chr(97 + 2 * i), chr(97 + 2 * i + 1)) for i in range(self.rank)]
-        rotation_pairs = [first + second for first, second in pairs]
-        output_indices = "".join(first for first, _ in pairs)
-        tensor_indices = "".join(second for _, second in pairs)
-        einsum_str = ",".join(rotation_pairs) + "," + tensor_indices + "->" + output_indices
-        full = jnp.einsum(einsum_str, *([R] * self.rank), self.as_full())
+        full = self.as_full()
+        if self.rank == 2:
+            full = jnp.einsum("ia,jb,...ab->...ij", R, R, full)
+        elif self.rank == 4:
+            full = jnp.einsum("ia,jb,kc,ld,...abcd->...ijkl", R, R, R, R, full)
+        else:
+            raise NotImplementedError("rotate currently supports only rank-2 and rank-4 tensors")
         return self._wrap_full(self.space, full)
