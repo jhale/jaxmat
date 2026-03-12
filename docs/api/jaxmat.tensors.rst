@@ -7,9 +7,13 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   jaxmat.tensors.generic_tensors
-   jaxmat.tensors.linear_algebra
-   jaxmat.tensors.tensor_utils
+   jaxmat.tensors.conversions
+   jaxmat.tensors.invariants
+   jaxmat.tensors.kinematics
+   jaxmat.tensors.ops
+   jaxmat.tensors.spaces
+   jaxmat.tensors.spectral
+   jaxmat.tensors.tensor
    jaxmat.tensors.utils
 
 Module contents

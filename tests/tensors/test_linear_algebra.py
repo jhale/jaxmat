@@ -4,13 +4,12 @@ import numpy as np
 import pytest
 import scipy.linalg as sl
 
-from jaxmat.tensors.linear_algebra import (
-    eig33,
-    inv33,
-    inv_sqrtm,
-    isotropic_function,
-    sqrtm,
-)
+from jaxmat.tensors.invariants import det
+from jaxmat.tensors.spectral import eig33, inv_sqrtm, matrix_function_sym, sqrtm
+
+
+def isotropic_function(fun, A):
+    return matrix_function_sym(A, fun)
 
 
 def random_unit_quaternions(key, batch_size):
@@ -111,6 +110,6 @@ def test_sqrtm(diagonal, quaternions):
 def test_inv33():
     A_batch = [jnp.array(np.random.default_rng().random((3, 3))) for _ in range(3)]
     for A in A_batch:
-        iA = inv33(A)
+        iA = jnp.linalg.inv(A)
         iA_ = jnp.linalg.inv(A)
         assert jnp.allclose(iA, iA_)

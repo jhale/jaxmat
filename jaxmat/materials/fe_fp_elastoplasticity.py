@@ -10,7 +10,7 @@ from jaxmat.tensors import (
     second_order,
     symmetric_identity2,
 )
-from jaxmat.tensors.linear_algebra import det33 as det
+from jaxmat.tensors.invariants import det
 from jaxmat.tensors.utils import FischerBurmeister as FB
 from jaxmat.utils import default_value
 

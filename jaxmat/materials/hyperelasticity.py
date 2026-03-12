@@ -5,7 +5,7 @@ import jax
 import jax.numpy as jnp
 
 from jaxmat.tensors import eigenvalues
-from jaxmat.tensors.linear_algebra import det33, principal_invariants
+from jaxmat.tensors.invariants import det, principal_invariants
 
 from .behavior import FiniteStrainBehavior
 
@@ -24,7 +24,7 @@ class HyperelasticPotential(eqx.Module):
     def Cauchy(self, F):
         # Divide on the right rather than on the left to preserve Tensor object
         # due to operator dispatch priority.
-        return (self.PK1(F) @ F.T).sym / det33(F)
+        return (self.PK1(F) @ F.T).sym / det(F)
 
 
 class Hyperelasticity(FiniteStrainBehavior):
@@ -104,7 +104,7 @@ class CompressibleOgden(HyperelasticPotential):
 
     def __call__(self, F):
         C = F.T @ F
-        J = jnp.sqrt(det33(C))
+        J = jnp.sqrt(det(C))
         Cb = J ** (-2 / 3) * C
         lambCb = eigenvalues(Cb)
         return self.W_lamb(lambCb) + self.kappa * self.volumetric(J)

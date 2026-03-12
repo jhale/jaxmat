@@ -67,26 +67,3 @@ def mandel4_to_full(a: jax.Array, dim: int) -> jax.Array:
                     out = out.at[..., ii, jj, kk, ll].set(value)
                     out = out.at[..., kk, ll, ii, jj].set(value)
     return out
-
-
-def full_to_legacy_tensor2_array(x: jax.Array) -> jax.Array:
-    dim = x.shape[-1]
-    comps = [x[..., i, i] for i in range(dim)]
-    for i in range(dim):
-        for j in range(i + 1, dim):
-            comps.append(x[..., i, j])
-            comps.append(x[..., j, i])
-    return jnp.stack(comps, axis=-1)
-
-
-def legacy_tensor2_array_to_full(a: jax.Array, dim: int) -> jax.Array:
-    out = jnp.zeros((*a.shape[:-1], dim, dim), dtype=a.dtype)
-    for i in range(dim):
-        out = out.at[..., i, i].set(a[..., i])
-    offset = dim
-    for i in range(dim):
-        for j in range(i + 1, dim):
-            out = out.at[..., i, j].set(a[..., offset])
-            out = out.at[..., j, i].set(a[..., offset + 1])
-            offset += 2
-    return out
