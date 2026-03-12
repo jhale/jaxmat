@@ -2,9 +2,8 @@ from __future__ import annotations
 
 import jax.numpy as jnp
 
-from .invariants import main_invariants, pq_invariants, principal_invariants
-from .ops import dev, trace
-from .spectral import eig33, expm, inv_sqrtm, logm, matrix_function_sym, powm, sqrtm
+from .ops import trace
+from .spectral import matrix_function_sym
 
 
 def dim(A):

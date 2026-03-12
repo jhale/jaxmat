@@ -139,21 +139,11 @@ def _eig33_single_invariants(A, rtol=1e-16):
             [
                 3.0 * jnp.sqrt(3.0) * (v * w * alpha + u * (v * v - w * w)),
                 alpha * beta * gamma + alpha * u * u + beta * v * v + gamma * w * w,
-                2.0 * u * beta * gamma
-                - v * w * (beta - gamma)
-                + u * (2.0 * u * u - v * v - w * w),
+                2.0 * u * beta * gamma - v * w * (beta - gamma) + u * (2.0 * u * u - v * v - w * w),
                 2.0
-                * (
-                    v * alpha * gamma
-                    + u * w * (beta - gamma)
-                    + v * (v * v + w * w - 2.0 * u * u)
-                ),
+                * (v * alpha * gamma + u * w * (beta - gamma) + v * (v * v + w * w - 2.0 * u * u)),
                 2.0
-                * (
-                    w * alpha * beta
-                    + u * v * (beta - gamma)
-                    + w * (v * v + w * w - 2.0 * u * u)
-                ),
+                * (w * alpha * beta + u * v * (beta - gamma) + w * (v * v + w * w - 2.0 * u * u)),
             ],
             dtype=A.dtype,
         )
@@ -187,6 +177,7 @@ def _eig33_single_invariants(A, rtol=1e-16):
     order = jnp.argsort(eigvals)
     eigvals = eigvals[order]
     eigendyads = eigendyads[order]
+    eigendyads = 0.5 * (eigendyads + jnp.swapaxes(eigendyads, -1, -2))
     return eigvals, eigendyads
 
 
