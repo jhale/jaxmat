@@ -19,7 +19,12 @@
 # This short demo reports the computational performance that can be expected
 # when running `jaxmat` on a CPU or GPU for a batch of $N$ material
 # points.
-# $\newcommand{\bFe}{\boldsymbol{F}^\text{e}}\newcommand{\bFp}{\boldsymbol{F}^\text{p}}\newcommand{\bbe}{\boldsymbol{b}^\text{e}}\newcommand{\bbebar}{\overline{\boldsymbol{b}}^\text{e}}$
+#
+# $\newcommand{\bFe}{\boldsymbol{F}^\text{e}}
+#  \newcommand{\bFp}{\boldsymbol{F}^\text{p}}
+#  \newcommand{\bbe}{\boldsymbol{b}^\text{e}}
+#  \newcommand{\bbebar}{\overline{\boldsymbol{b}}^\text{e}}
+# $
 #
 # The behavior is a finite-strain $\bF^\text{e}\bF^\text{p}$ elastoplastic
 # model implemented in the `FeFpJ2Plasticity` behavior. We perform a monotonic
@@ -112,7 +117,9 @@
 # {cite:p}`seidl2022calibration` as:
 #
 # $$
-# r_{\bbe} = \dev(\bbebar - \bbebar_\text{trial})  + \sqrt{\dfrac{2}{3}}\Delta p \operatorname{tr}(\bbebar) \dfrac{\bs}{\|\bs\|}   + \bI (\det(\bbebar) - 1) = 0
+# r_{\bbe} = \dev(\bbebar - \bbebar_\text{trial})
+#   + \sqrt{\dfrac{2}{3}}\Delta p \operatorname{tr}(\bbebar) \dfrac{\bs}{\|\bs\|}
+#   + \bI (\det(\bbebar) - 1) = 0
 # $$
 #
 # Note that the first part of $r_{\bbe}$ is deviatoric only and enforce the
@@ -157,9 +164,7 @@ import numpy as np
 from jaxmat import get_path
 
 current_path = get_path()
-data = np.loadtxt(
-    current_path / "../demos/_data/Treloar_rubber.csv", skiprows=1, delimiter=","
-)
+data = np.loadtxt(current_path / "../demos/_data/Treloar_rubber.csv", skiprows=1, delimiter=",")
 
 colors = {"cpu": "royalblue", "gpu": "crimson"}
 style = {"jac": "-", "no_jac": "--"}

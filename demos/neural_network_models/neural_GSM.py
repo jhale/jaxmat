@@ -128,7 +128,7 @@ import optimistix as optx
 import jaxmat.materials as jm
 from jaxmat.nn.icnn import ICNN
 from jaxmat.state import AbstractState, make_batched
-from jaxmat.tensors import SymmetricTensor2, main_invariants
+from jaxmat.tensors import Tensor, main_invariants, symmetric_second_order, zeros
 from jaxmat.utils import partition_by_node_names
 
 jax.config.update("jax_platform_name", "cpu")
@@ -183,7 +183,7 @@ def compute_evolution(material, gamma_list, times):
         new_eps = jnp.array([[0, gamma / 2, 0], [gamma / 2, 0, 0], [0, 0, 0]])
 
         # Create tensor object (assuming this is JAX-compatible)
-        new_eps = SymmetricTensor2(tensor=new_eps)
+        new_eps = Tensor.from_full(symmetric_second_order(3), new_eps)
 
         # Update material response
         new_stress, new_state = material.constitutive_update(new_eps, state, dt_)
@@ -213,13 +213,13 @@ def compute_evolution(material, gamma_list, times):
 #
 # %%
 class InternalState(AbstractState):
-    alpha: SymmetricTensor2 = eqx.field(init=False)
+    alpha: Tensor = eqx.field(init=False)
     """Viscoelastic strains."""
     Nvar: int = eqx.field(static=True, default=1)
     """Number of viscoelastic variables."""
 
     def __post_init__(self):
-        self.alpha = make_batched(SymmetricTensor2(), self.Nvar)
+        self.alpha = make_batched(zeros(symmetric_second_order(3)), self.Nvar)
 
 
 # %% [markdown]
@@ -326,8 +326,9 @@ for Nvar in Nvar_list:
 #
 # %%
 sig_train = compute_evolution(material, gamma, times)
-sig_noise = SymmetricTensor2(
-    tensor=sig_train.tensor + jax.random.normal(key, shape=sig_train.tensor.shape)
+sig_noise = Tensor.from_full(
+    symmetric_second_order(3),
+    sig_train.tensor + jax.random.normal(key, shape=sig_train.tensor.shape),
 )
 sig_init = compute_evolution(gsm_list[-1], gamma, times)
 
@@ -374,7 +375,7 @@ def loss(trainable, args):
     else:
         material_ = eqx.combine(trainable, static)
     sig_hat = compute_evolution(material_, gamma, times)
-    loss_ = optax.l2_loss(sig_hat.array.flatten(), sig_data.array.flatten())
+    loss_ = optax.l2_loss(sig_hat.as_compact().flatten(), sig_data.as_compact().flatten())
     return (
         loss_.mean(),
         sig_hat,

@@ -7,7 +7,7 @@ from jaxmat.state import (
     SmallStrainState,
     make_batched,
 )
-from jaxmat.tensors import SymmetricTensor2, dev
+from jaxmat.tensors import Tensor, dev, symmetric_second_order, zeros
 from jaxmat.utils import default_value
 
 from .behavior import SmallStrainBehavior
@@ -25,9 +25,9 @@ class AFInternalState(SmallStrainState):
 
     p: float = default_value(0.0)
     """Cumulated plastic strain"""
-    epsp: SymmetricTensor2 = eqx.field(default_factory=lambda: SymmetricTensor2())
+    epsp: Tensor = eqx.field(default_factory=lambda: zeros(symmetric_second_order(3)))
     """Plastic strain tensor"""
-    X: SymmetricTensor2 = eqx.field(default_factory=lambda: make_batched(SymmetricTensor2(), 2))
+    X: Tensor = eqx.field(default_factory=lambda: make_batched(zeros(symmetric_second_order(3)), 2))
     """Backstress tensors"""
 
 
@@ -121,15 +121,15 @@ class GenericInternalState(SmallStrainState):
 
     p: float = default_value(0.0)
     """Cumulated plastic strain"""
-    epsp: SymmetricTensor2 = eqx.field(default_factory=lambda: SymmetricTensor2())
+    epsp: Tensor = eqx.field(default_factory=lambda: zeros(symmetric_second_order(3)))
     """Plastic strain tensor"""
     nX: int = eqx.field(static=True, default=1)
     """Number of kinematic hardening mechanisms."""
-    X: SymmetricTensor2 = eqx.field(init=False)
+    X: Tensor = eqx.field(init=False)
     """Backstress tensors"""
 
     def __post_init__(self):
-        self.X = make_batched(SymmetricTensor2(), self.nX)
+        self.X = make_batched(zeros(symmetric_second_order(3)), self.nX)
 
 
 class GenericViscoplasticity(SmallStrainBehavior):

@@ -78,6 +78,10 @@ def identity2(dim: int, dtype=jnp.float64) -> Tensor:
     return Tensor.from_full(second_order(dim), jnp.eye(dim, dtype=dtype))
 
 
+def symmetric_identity2(dim: int, dtype=jnp.float64) -> Tensor:
+    return Tensor.from_full(symmetric_second_order(dim), jnp.eye(dim, dtype=dtype))
+
+
 def identity4s(dim: int, dtype=jnp.float64) -> Tensor:
     n = dim * (dim + 1) // 2
     return Tensor.from_compact(symmetric_fourth_order(dim), jnp.eye(n, dtype=dtype))

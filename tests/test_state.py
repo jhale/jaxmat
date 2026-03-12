@@ -9,7 +9,12 @@ from jaxmat.state import (
     SmallStrainState,
     make_batched,
 )
-from jaxmat.tensors import SymmetricTensor2, Tensor
+from jaxmat.tensors import (
+    Tensor,
+    symmetric_identity2,
+    symmetric_second_order,
+    zeros,
+)
 from jaxmat.utils import default_value
 
 
@@ -20,7 +25,7 @@ class MyState(SmallStrainState):
 class OtherState(SmallStrainState):
     float_attribute: float = default_value(0.0)
     array_attribute: jax.Array = eqx.field(default_factory=lambda: jnp.ones((3,)))
-    tensor_attribute: SymmetricTensor2 = SymmetricTensor2()
+    tensor_attribute: Tensor = zeros(symmetric_second_order(3))
 
 
 def test_state():
@@ -44,9 +49,11 @@ def test_state():
 
 
 def test_state_tensor_conversion():
-    state = OtherState(tensor_attribute=SymmetricTensor2.identity())
+    state = OtherState(tensor_attribute=symmetric_identity2(3))
     new_state = jax.tree.map(
-        lambda x: x.array if isinstance(x, Tensor) else x,
+        lambda x: (
+            x.as_compact() if isinstance(x, Tensor) and x.space == symmetric_second_order(3) else x
+        ),
         state,
         is_leaf=lambda x: isinstance(x, Tensor),
     )
@@ -88,7 +95,7 @@ def test_tree_utils():
 
 
 def test_small_strain():
-    state = SmallStrainState(strain=SymmetricTensor2.identity())
+    state = SmallStrainState(strain=symmetric_identity2(3))
     state = state.update(stress=2 * state.strain)
     assert jnp.allclose(state.strain, jnp.eye(3))
     assert jnp.allclose(state.eps, jnp.eye(3))

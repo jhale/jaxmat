@@ -4,14 +4,14 @@ import jax.numpy as jnp
 
 import jaxmat.materials as jm
 from jaxmat.state import AbstractState, make_batched
-from jaxmat.tensors import SymmetricTensor2
+from jaxmat.tensors import Tensor, symmetric_second_order, zeros
 from jaxmat.utils import enforce_dtype
 
 
 class SLSState(AbstractState):
     """Internal state for the :class:`StandardLinearSolid` behavior."""
 
-    epsv: SymmetricTensor2 = eqx.field(default_factory=lambda: SymmetricTensor2())
+    epsv: Tensor = eqx.field(default_factory=lambda: zeros(symmetric_second_order(3)))
     r"""Viscous strain $\beps^\text{v}$."""
 
 
@@ -67,16 +67,16 @@ class GeneralizedMaxwellState(AbstractState):
     Stores the internal viscous strains and stresses for each Maxwell branch.
     """
 
-    epsv: SymmetricTensor2 = eqx.field(init=False)
+    epsv: Tensor = eqx.field(init=False)
     r"""Viscous strains $\beps^\text{v}_i$ for each Maxwell branch."""
-    sigv: SymmetricTensor2 = eqx.field(init=False)
+    sigv: Tensor = eqx.field(init=False)
     r"""Viscoelastic stresses $\bsig^\text{v}_i$ for each Maxwell branch."""
     Nbranch: int = eqx.field(static=True, default=1)
     """Number of Maxwell branches."""
 
     def __post_init__(self):
-        self.epsv = make_batched(SymmetricTensor2(), self.Nbranch)
-        self.sigv = make_batched(SymmetricTensor2(), self.Nbranch)
+        self.epsv = make_batched(zeros(symmetric_second_order(3)), self.Nbranch)
+        self.sigv = make_batched(zeros(symmetric_second_order(3)), self.Nbranch)
 
 
 class GeneralizedMaxwell(jm.SmallStrainBehavior):

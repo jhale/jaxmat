@@ -220,3 +220,7 @@ class Tensor(eqx.Module):
         else:
             raise NotImplementedError("rotate currently supports only rank-2 and rank-4 tensors")
         return self._wrap_full(self.space, full)
+
+
+def zeros(space: TensorSpace, dtype=jnp.float64) -> Tensor:
+    return Tensor.from_full(space, jnp.zeros(space.full_shape, dtype=dtype))

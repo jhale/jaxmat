@@ -6,7 +6,7 @@ import jax.numpy as jnp
 import lineax as lx
 import optimistix as optx
 
-from jaxmat.tensors import SymmetricTensor2
+from jaxmat.tensors import Tensor, symmetric_second_order
 
 linear_solver = lx.AutoLinearSolver(well_posed=False)
 solver, adjoint = (
@@ -125,10 +125,22 @@ def residual(material, loader: ImposedLoading, eps: jnp.ndarray, state: dict, dt
     eps_vals, sig_vals, strain_mask = loader()
 
     # Flatten mask to array accounting for symmetry class of strain
-    if isinstance(eps, SymmetricTensor2):
+    if isinstance(eps, Tensor) and eps.space == symmetric_second_order(eps.dim):
 
         def to_array(x):
-            return SymmetricTensor2(tensor=x).array
+            if isinstance(x, Tensor):
+                full = x.as_full()
+            else:
+                full = jnp.asarray(x)
+                if full.dtype == jnp.bool_:
+                    full = jnp.logical_or(full, jnp.swapaxes(full, -1, -2))
+                else:
+                    diag = (
+                        jnp.eye(full.shape[-1], dtype=full.dtype)
+                        * jnp.diagonal(full, axis1=-2, axis2=-1)[..., None, :]
+                    )
+                    full = full + jnp.swapaxes(full, -1, -2) - diag
+            return Tensor.from_full(eps.space, full, validate=False).as_compact()
     else:
 
         def to_array(x):

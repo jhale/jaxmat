@@ -137,13 +137,13 @@ from jaxmat.materials.plastic_surfaces import (
     AbstractPlasticSurface,
 )
 from jaxmat.state import AbstractState
-from jaxmat.tensors import SymmetricTensor2, pq_invariants
+from jaxmat.tensors import Tensor, pq_invariants, symmetric_second_order, zeros
 from jaxmat.tensors.utils import FischerBurmeister as FB
 
 
 class InternalState(AbstractState):
     p: float = eqx.field(init=False)
-    epsp: SymmetricTensor2 = SymmetricTensor2()
+    epsp: Tensor = zeros(symmetric_second_order(3))
     n_surf: int = eqx.field(static=True, default=1)
 
     def __post_init__(self):
@@ -364,7 +364,9 @@ sig_init = sig_init.at[:, 0, 0].set(-5 * sig0)
 sig_init = sig_init.at[:, 1, 1].set(-5 * sig0)
 sig_init = sig_init.at[:, 2, 2].set(-5 * sig0)
 
-state = eqx.tree_at(lambda s: s.stress, state, replace=SymmetricTensor2(tensor=sig_init))
+state = eqx.tree_at(
+    lambda s: s.stress, state, replace=Tensor.from_full(symmetric_second_order(3), sig_init)
+)
 
 # %% [markdown]
 # We now incrementally apply total strain magnitudes in the defined directions and compute the
@@ -382,7 +384,7 @@ cmap = plt.colormaps.get_cmap("inferno")
 colors = cmap(jnp.linspace(0, 1, Nincr))
 p_old, q_old = jax.vmap(pq_invariants)(state.stress)
 for i, eps_ in enumerate(eps_list):
-    Eps = SymmetricTensor2(tensor=eps_ * eps_dir)
+    Eps = Tensor.from_full(symmetric_second_order(3), eps_ * eps_dir)
     stress, state = batched_constitutive_update(Eps, state, dt)
 
     p, q = jax.vmap(pq_invariants)(stress)

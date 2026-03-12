@@ -31,7 +31,7 @@ import jax.numpy as jnp
 import matplotlib.pyplot as plt
 
 import jaxmat.materials as jm
-from jaxmat.tensors import SymmetricTensor2
+from jaxmat.tensors import Tensor, symmetric_second_order
 
 jax.config.update("jax_platform_name", "cpu")
 
@@ -132,7 +132,7 @@ print(internal_state_variables.__dict__)
 
 gamma = 1e-3
 new_eps = jnp.array([[0, gamma / 2, 0], [gamma / 2, 0, 0], [0, 0, 0]])
-new_eps = SymmetricTensor2(tensor=new_eps)
+new_eps = Tensor.from_full(symmetric_second_order(3), new_eps)
 dt = 0.0
 new_stress, new_state = material.constitutive_update(new_eps, state, dt)
 print(new_stress)
@@ -144,7 +144,7 @@ state = material.init_state()
 tau = jnp.zeros_like(gamma_list)
 for i, gamma in enumerate(gamma_list):
     new_eps = jnp.array([[0, gamma / 2, 0], [gamma / 2, 0, 0], [0, 0, 0]])
-    new_eps = SymmetricTensor2(tensor=new_eps)
+    new_eps = Tensor.from_full(symmetric_second_order(3), new_eps)
     dt = 0.0
     new_stress, new_state = material.constitutive_update(new_eps, state, dt)
     state = new_state
@@ -174,7 +174,7 @@ p = jnp.zeros_like(gamma_list)
 mu_tang = jnp.zeros_like(gamma_list)
 for i, gamma in enumerate(gamma_list):
     new_eps = jnp.array([[0, gamma / 2, 0], [gamma / 2, 0, 0], [0, 0, 0]])
-    new_eps = SymmetricTensor2(tensor=new_eps)
+    new_eps = Tensor.from_full(symmetric_second_order(3), new_eps)
     dt = 0.0
     Ctang, new_state = tangent_operator(new_eps, state, dt)
     state = new_state

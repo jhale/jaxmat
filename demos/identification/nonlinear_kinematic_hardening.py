@@ -41,7 +41,7 @@ import optax
 import optimistix as optx
 
 import jaxmat.materials as jm
-from jaxmat.tensors import SymmetricTensor2
+from jaxmat.tensors import Tensor, symmetric_second_order
 from jaxmat.utils import default_value, partition_by_node_names, print_eqx_fields
 
 jax.config.update("jax_platform_name", "cpu")
@@ -244,7 +244,7 @@ def compute_evolution(material, gamma_list, dt=0.0):
         new_eps = jnp.array([[0, gamma / 2, 0], [gamma / 2, 0, 0], [0, 0, 0]])
 
         # Create tensor object (assuming this is JAX-compatible)
-        new_eps = SymmetricTensor2(tensor=new_eps)
+        new_eps = Tensor.from_full(symmetric_second_order(3), new_eps)
 
         # Update material response
         new_stress, new_state = material.constitutive_update(new_eps, state, dt)

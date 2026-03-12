@@ -5,7 +5,7 @@ import optimistix as optx
 from optax.tree_utils import tree_add, tree_zeros_like
 
 from jaxmat.state import AbstractState, make_batched
-from jaxmat.tensors import SymmetricTensor2, dev
+from jaxmat.tensors import Tensor, dev, symmetric_second_order, zeros
 from jaxmat.tensors.utils import FischerBurmeister as FB
 from jaxmat.utils import default_value, enforce_dtype
 
@@ -25,7 +25,7 @@ class InternalState(AbstractState):
 
     p: jax.Array = default_value(0.0)
     """Cumulated plastic strain"""
-    epsp: SymmetricTensor2 = eqx.field(default_factory=lambda: SymmetricTensor2())
+    epsp: Tensor = eqx.field(default_factory=lambda: zeros(symmetric_second_order(3)))
     """Plastic strain tensor"""
 
 
@@ -140,15 +140,15 @@ class GeneralHardeningInternalState(AbstractState):
 
     p: float = default_value(0.0)
     """Cumulated plastic strain"""
-    epsp: SymmetricTensor2 = eqx.field(default_factory=lambda: SymmetricTensor2())
+    epsp: Tensor = eqx.field(default_factory=lambda: zeros(symmetric_second_order(3)))
     """Plastic strain tensor"""
-    alpha: SymmetricTensor2 = eqx.field(init=False)
+    alpha: Tensor = eqx.field(init=False)
     r"""Kinematic hardening variables $\balpha_i$."""
     nvar: int = eqx.field(static=True, default=1)
     """Number of kinematic hardening variables."""
 
     def __post_init__(self):
-        self.alpha = make_batched(SymmetricTensor2(), self.nvar)
+        self.alpha = make_batched(zeros(symmetric_second_order(3)), self.nvar)
 
 
 class GeneralHardening(SmallStrainBehavior):

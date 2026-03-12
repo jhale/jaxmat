@@ -1,4 +1,3 @@
-from .generic_tensors import IsotropicTensor4, SymmetricTensor2, SymmetricTensor4, Tensor2
 from .invariants import (
     J2,
     J3,
@@ -31,6 +30,7 @@ from .ops import (
     spherical,
     spherical_projector,
     sym,
+    symmetric_identity2,
     trace,
 )
 from .spaces import (
@@ -62,7 +62,7 @@ from .spectral import (
     spectral_decomposition_sym,
     sqrtm,
 )
-from .tensor import Tensor
+from .tensor import Tensor, zeros
 from .utils import safe_fun, safe_norm, safe_sqrt
 
 __all__ = [
@@ -74,12 +74,8 @@ __all__ = [
     "NONE_4",
     "SKEW_2",
     "SYMMETRIC_2",
-    "IsotropicTensor4",
-    "SymmetricTensor2",
-    "SymmetricTensor4",
     "SymmetryClass",
     "Tensor",
-    "Tensor2",
     "TensorSpace",
     "almansi",
     "apply",
@@ -121,13 +117,12 @@ __all__ = [
     "spherical_projector",
     "sqrtm",
     "stretch",
-    "stretch_tensor",
     "sym",
     "symmetric_fourth_order",
+    "symmetric_identity2",
     "symmetric_second_order",
     "tensor_space",
     "trace",
     "von_mises",
+    "zeros",
 ]
-
-stretch_tensor = stretch

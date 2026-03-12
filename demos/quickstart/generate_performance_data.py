@@ -8,7 +8,7 @@ import numpy as np
 
 import jaxmat.materials as jm
 from jaxmat.state import make_batched
-from jaxmat.tensors import Tensor2
+from jaxmat.tensors import Tensor, second_order
 
 platform = "gpu"
 with_jac = True
@@ -43,7 +43,9 @@ def test_FeFp_elastoplasticity(material, with_jac=False, Nbatch=1, Nsteps=20):
         t += dt
         lamb = 1 + eps_dot * t
 
-        F_ = Tensor2(tensor=jnp.diag(jnp.asarray([lamb, 1 / jnp.sqrt(lamb), 1 / jnp.sqrt(lamb)])))
+        F_ = Tensor.from_full(
+            second_order(3), jnp.diag(jnp.asarray([lamb, 1 / jnp.sqrt(lamb), 1 / jnp.sqrt(lamb)]))
+        )
         F = make_batched(F_, Nbatch)
 
         tic = time()

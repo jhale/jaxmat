@@ -3,7 +3,13 @@ import jax.numpy as jnp
 import optimistix as optx
 
 from jaxmat.state import AbstractState
-from jaxmat.tensors import SymmetricTensor2, Tensor2, dev, safe_fun
+from jaxmat.tensors import (
+    Tensor,
+    dev,
+    safe_fun,
+    second_order,
+    symmetric_identity2,
+)
 from jaxmat.tensors.linear_algebra import det33 as det
 from jaxmat.tensors.utils import FischerBurmeister as FB
 from jaxmat.utils import default_value
@@ -18,7 +24,7 @@ class InternalState(AbstractState):
 
     p: float = default_value(0.0)
     """Cumulated plastic strain $p$."""
-    be_bar: SymmetricTensor2 = SymmetricTensor2.identity()
+    be_bar: Tensor = symmetric_identity2(3)
     r"""Isochoric elastic left Cauchy-Green strain $\bar{\bb}^\text{e}$."""
 
 
@@ -38,7 +44,7 @@ class FeFpJ2Plasticity(FiniteStrainBehavior):
         isv_old = state.internal
         be_bar_old = isv_old.be_bar
         p_old = isv_old.p
-        Id = SymmetricTensor2.identity()
+        Id = symmetric_identity2(3)
 
         def solve_state(F):
             # relative strain and elastic predictor
@@ -72,7 +78,7 @@ class FeFpJ2Plasticity(FiniteStrainBehavior):
         s = self.elasticity.mu * dev(be_bar)
         J = det(F)
         tau = s + self.elasticity.kappa / 2 * (J**2 - 1) * Id
-        P = Tensor2(tensor=tau @ (F.T).inv)
+        P = Tensor.from_full(second_order(3), tau @ (F.T).inv)
 
         new_state = state.update(PK1=P, internal=y)
         return P, new_state

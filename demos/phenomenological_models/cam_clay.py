@@ -95,7 +95,7 @@ from optax.tree_utils import tree_zeros_like
 import jaxmat
 import jaxmat.materials as jm
 from jaxmat.loader import ImposedLoading, global_solve
-from jaxmat.tensors import SymmetricTensor2, dev, safe_sqrt
+from jaxmat.tensors import Tensor, dev, safe_sqrt, symmetric_second_order, zeros
 from jaxmat.tensors.utils import FischerBurmeister as FB
 
 jax.config.update("jax_platform_name", "cpu")
@@ -116,7 +116,7 @@ jax.config.update("jax_platform_name", "cpu")
 # %%
 # Define internal state to store plastic strain
 class InternalState(jaxmat.state.AbstractState):
-    epsp: SymmetricTensor2 = eqx.field(default_factory=lambda: SymmetricTensor2())
+    epsp: Tensor = eqx.field(default_factory=lambda: zeros(symmetric_second_order(3)))
 
 
 # %% [markdown]

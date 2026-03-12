@@ -4,7 +4,7 @@ import equinox as eqx
 import jax
 import jax.numpy as jnp
 
-from jaxmat.tensors import SymmetricTensor2, dev, eigenvalues
+from jaxmat.tensors import Tensor, dev, eigenvalues, symmetric_second_order
 from jaxmat.tensors.utils import safe_norm, safe_sqrt
 from jaxmat.utils import default_value, enforce_dtype
 
@@ -14,7 +14,9 @@ def safe_zero(method):
 
     def wrapper(self, x, *args, eps=1e-16):
         x_norm = jnp.linalg.norm(x)
-        x_safe = SymmetricTensor2(tensor=jnp.where(x_norm > eps, x, 0 * x))
+        x_safe = Tensor.from_full(
+            symmetric_second_order(x.dim), jnp.where(x_norm > eps, x.as_full(), 0 * x.as_full())
+        )
         return jnp.where(x_norm > eps, method(self, x_safe, *args), 0.0)
 
     return wrapper
@@ -24,7 +26,7 @@ class AbstractPlasticSurface(eqx.Module):
     """Abstract plastic surface class."""
 
     @abstractmethod
-    def __call__(self, sig: SymmetricTensor2, *args):
+    def __call__(self, sig: Tensor, *args):
         """Yield surface expression.
 
         .. Tip::
@@ -40,7 +42,7 @@ class AbstractPlasticSurface(eqx.Module):
         """
         pass
 
-    def normal(self, sig: SymmetricTensor2, *args):
+    def normal(self, sig: Tensor, *args):
         """Normal to the yield surface. Computed automatically using forward AD on :func:`__call__`.
 
         Args:

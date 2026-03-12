@@ -49,7 +49,7 @@ import jax.numpy as jnp
 import matplotlib.pyplot as plt
 
 import jaxmat.materials as jm
-from jaxmat.tensors import SymmetricTensor2
+from jaxmat.tensors import Tensor, symmetric_second_order
 
 jax.config.update("jax_platform_name", "cpu")
 
@@ -61,7 +61,7 @@ eps = jnp.zeros((N, 3, 3))
 eps = eps.at[:, 0, 0].set(eps_ * jnp.cos(theta))
 eps = eps.at[:, 1, 1].set(eps_ * jnp.sin(theta))
 eps = eps.at[:, 2, 2].set(-eps[:, 0, 0] - eps[:, 1, 1])
-eps = SymmetricTensor2(tensor=eps)
+eps = Tensor.from_full(symmetric_second_order(3), eps)
 
 # %% [markdown]
 # Next, we define an elastoplastic material based on `GeneralIsotropicHardening`, which allows us to

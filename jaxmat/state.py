@@ -4,7 +4,7 @@ import equinox as eqx
 import jax
 import jax.numpy as jnp
 
-from jaxmat.tensors import SymmetricTensor2, Tensor2
+from jaxmat.tensors import Tensor, identity2, second_order, symmetric_second_order, zeros
 
 
 class AbstractState(eqx.Module):
@@ -53,22 +53,22 @@ class SmallStrainState(AbstractState):
     internal : :class:`AbstractState`, optional
         Nested state object representing internal variables (e.g., plastic strain,
         hardening variables, etc.). Defaults to None.
-    strain : :class:`SymmetricTensor2`
+    strain : :class:`Tensor`
         Symmetric second-order strain tensor $\beps$ (small-strain assumption).
-    stress : :class:`SymmetricTensor2`
+    stress : :class:`Tensor`
         Symmetric second-order Cauchy stress tensor $\bsig$.
 
     Notes
     -----
-    eps : :class:`SymmetricTensor2`
+    eps : :class:`Tensor`
         Alias for `strain`, allows accessing via `state.eps`.
-    sig : :class:`SymmetricTensor2`
+    sig : :class:`Tensor`
         Alias for `stress`, allows accessing via `state.sig`.
     """
 
     internal: AbstractState = None
-    strain: SymmetricTensor2 = eqx.field(default_factory=SymmetricTensor2)
-    stress: SymmetricTensor2 = eqx.field(default_factory=SymmetricTensor2)
+    strain: Tensor = eqx.field(default_factory=lambda: zeros(symmetric_second_order(3)))
+    stress: Tensor = eqx.field(default_factory=lambda: zeros(symmetric_second_order(3)))
 
     # define alias targets to authorize state updates with alias names
     __alias_targets__: typing.ClassVar[dict] = {"eps": "strain", "sig": "stress"}
@@ -114,25 +114,25 @@ class FiniteStrainState(AbstractState):
     internal : AbstractState, optional
         Nested internal state representing material history or additional
         constitutive information. Defaults to None.
-    F : :class:`Tensor2`
+    F : :class:`Tensor`
         Deformation gradient $\bF$. Initialized as the identity tensor.
-    PK1 : :class:`Tensor2`
+    PK1 : :class:`Tensor`
         First Piola-Kirchhoff stress tensor $\bP$.
 
     Notes
     -----
-    PK2 : :class:`SymmetricTensor2`
+    PK2 : :class:`Tensor`
         Second Piola-Kirchhoff stress tensor $\bS$, computed via :func:`PK1_to_PK2`.
-    sig : :class:`SymmetricTensor2`
+    sig : :class:`Tensor`
         Cauchy stress tensor $\bsig$, computed via :func:`PK1_to_Cauchy`.
-    Cauchy : :class:`SymmetricTensor2`
+    Cauchy : :class:`Tensor`
         Alias for ``sig``.
 
     """
 
     internal: AbstractState = None
-    F: Tensor2 = eqx.field(default_factory=Tensor2.identity)
-    PK1: Tensor2 = eqx.field(default_factory=Tensor2)
+    F: Tensor = eqx.field(default_factory=lambda: identity2(3))
+    PK1: Tensor = eqx.field(default_factory=lambda: zeros(second_order(3)))
 
     @property
     def PK2(self):

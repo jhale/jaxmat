@@ -71,7 +71,7 @@ import optimistix as optx
 import jaxmat
 import jaxmat.materials as jm
 from jaxmat.loader import ImposedLoading, global_solve
-from jaxmat.tensors import SymmetricTensor2, dev
+from jaxmat.tensors import Tensor, dev, symmetric_second_order, zeros
 
 jax.config.update("jax_platform_name", "cpu")
 
@@ -99,7 +99,7 @@ jax.config.update("jax_platform_name", "cpu")
 #
 # %%
 class InternalState(jaxmat.state.AbstractState):
-    epsvp: SymmetricTensor2 = eqx.field(default_factory=lambda: SymmetricTensor2())
+    epsvp: Tensor = eqx.field(default_factory=lambda: zeros(symmetric_second_order(3)))
 
 
 # %% [markdown]
@@ -118,7 +118,9 @@ class InternalState(jaxmat.state.AbstractState):
 def safe_zero(method):
     def wrapper(self, x):
         x_norm = jnp.linalg.norm(x)
-        x_safe = SymmetricTensor2(tensor=jnp.where(x_norm > 0, x, x))
+        x_safe = Tensor.from_full(
+            symmetric_second_order(3), jnp.where(x_norm > 0, x.as_full(), x.as_full())
+        )
         return jnp.where(x_norm > 0, method(self, x_safe), 0.0)
 
     return wrapper
@@ -270,7 +272,9 @@ def compute_pq(sig):
 
 
 def compute_surface_normals(p, q):
-    sig = SymmetricTensor2(tensor=jnp.diag(jnp.asarray([p + 2 * q / 3, p - q / 3, p - q / 3])))
+    sig = Tensor.from_full(
+        symmetric_second_order(3), jnp.diag(jnp.asarray([p + 2 * q / 3, p - q / 3, p - q / 3]))
+    )
     ys = green_ys(sig)
     n = green_ys.normal(sig)
     x, y = p / ys, q / ys
@@ -322,7 +326,7 @@ state = material.init_state(Nbatch)
 
 
 def set_initial_press(state, press):
-    state = state.update(stress=SymmetricTensor2(tensor=-press * jnp.eye(3)))
+    state = state.update(stress=Tensor.from_full(symmetric_second_order(3), -press * jnp.eye(3)))
     return state
 
 

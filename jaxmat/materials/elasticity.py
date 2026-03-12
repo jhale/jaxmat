@@ -4,7 +4,7 @@ import equinox as eqx
 import jax.numpy as jnp
 import jax.scipy as jsc
 
-from jaxmat.tensors import IsotropicTensor4, SymmetricTensor4
+from jaxmat.tensors import Tensor, isotropic_stiffness, symmetric_fourth_order
 from jaxmat.utils import enforce_dtype
 
 from .behavior import SmallStrainBehavior
@@ -41,11 +41,11 @@ class AbstractLinearElastic(eqx.Module):
 class LinearElastic(AbstractLinearElastic):
     """A generic linear elastic model with custom stiffness tensor."""
 
-    stiffness: SymmetricTensor4
+    stiffness: Tensor
     """4th-rank generic stiffness tensor"""
 
     @property
-    def C(self) -> SymmetricTensor4:
+    def C(self) -> Tensor:
         """Return the stiffness tensor."""
         return self.stiffness
 
@@ -66,7 +66,7 @@ class LinearElasticIsotropic(AbstractLinearElastic):
 
         where $\mathbb{J}$ and $\mathbb{K}$ are the hydrostatic and deviatoric projectors.
         """
-        return IsotropicTensor4(self.kappa, self.mu)
+        return isotropic_stiffness(self.kappa, self.mu)
 
     @property
     def kappa(self):
@@ -144,7 +144,7 @@ class LinearElasticOrthotropic(AbstractLinearElastic):
         )  # [xy, xz, yz] order
         S_Mandel = jsc.linalg.block_diag(S_diag, S_shear)
         C_Mandel = jnp.linalg.inv(S_Mandel)
-        return SymmetricTensor4(array=C_Mandel)
+        return Tensor.from_compact(symmetric_fourth_order(3), C_Mandel)
 
 
 class ElasticBehavior(SmallStrainBehavior):

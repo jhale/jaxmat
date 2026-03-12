@@ -2,7 +2,7 @@ import jax
 import jax.numpy as jnp
 
 import jaxmat.materials as jm
-from jaxmat.tensors import Tensor2
+from jaxmat.tensors import Tensor, second_order
 
 
 def test_compressible_ogden():
@@ -17,7 +17,7 @@ def test_compressible_ogden():
     F = F.at[:, 1, 1].set(lamb)
     F = F.at[:, 2, 2].set(1 / lamb**2)
 
-    F = Tensor2(tensor=F)
+    F = Tensor.from_full(second_order(3), F)
 
     jax.vmap(material.PK1)(F)
     jax.vmap(material.Cauchy)(F)

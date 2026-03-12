@@ -9,7 +9,7 @@ from jaxmat.materials.behavior import AbstractBehavior
 from jaxmat.state import (
     SmallStrainState,
 )
-from jaxmat.tensors import IsotropicTensor4, SymmetricTensor2
+from jaxmat.tensors import isotropic_stiffness, symmetric_identity2
 from jaxmat.utils import default_value, enforce_dtype
 
 
@@ -40,7 +40,7 @@ class LinearElasticIsotropic(jm.AbstractLinearElastic):
     r"""Poisson ratio $\nu$"""
 
     def C(self, **kwargs):
-        return IsotropicTensor4(self.kappa(**kwargs), self.mu(**kwargs))
+        return isotropic_stiffness(self.kappa(**kwargs), self.mu(**kwargs))
 
     def kappa(self, **kwargs):
         E = self.E(**kwargs)
@@ -103,9 +103,9 @@ for elasticity in [elasticity1, elasticity2, elasticity3]:
     print(state.strain)
     print(state.temperature)
 
-    eps = SymmetricTensor2.identity()
+    eps = symmetric_identity2(3)
     inputs = eps, 1.5
     stress, new_state = material.constitutive_update(inputs, state, 0.0)
-    print(stress.array)
+    print(stress.as_compact())
 
 # Batch along strain path and temperatures

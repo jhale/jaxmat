@@ -2,7 +2,7 @@ import jax
 import jax.numpy as jnp
 
 import jaxmat.materials as jm
-from jaxmat.tensors import SymmetricTensor2, SymmetricTensor4, utils
+from jaxmat.tensors import Tensor, symmetric_fourth_order, symmetric_second_order, utils
 
 
 def test_small_strain_orthotropic_rotation():
@@ -47,13 +47,13 @@ def test_small_strain_orthotropic_rotation():
     key = jax.random.PRNGKey(42)
     N = 3
     eps_ = jax.random.normal(key, (N, 3, 3))
-    eps = SymmetricTensor2(tensor=eps_)
+    eps = Tensor.from_full(symmetric_second_order(3), eps_)
 
     # Rotate stiffness tensor: L<->T permutation (90° around z-axis)
     C = elasticity.C
 
     C_rotated = C.rotate(R)
-    assert isinstance(C_rotated, SymmetricTensor4)
+    assert C_rotated.space == symmetric_fourth_order(3)
     assert jnp.allclose(C_rotated.rotate(R), C)
 
     elasticity_rotated = jm.LinearElasticOrthotropic(
